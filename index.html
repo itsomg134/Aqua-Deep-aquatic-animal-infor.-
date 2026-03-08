@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AQUA DEEP — Creatures of the Blue</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Mono:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --deep: #020b18;
+    --abyss: #050f1e;
+    --ocean: #0a1f35;
+    --mid: #0d2d4a;
+    --teal: #0e7c7b;
+    --cyan: #00c9c8;
+    --foam: #a8f0ee;
+    --pearl: #e8f5f5;
+    --gold: #f0c060;
+    --biolum: #39ffdb;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--deep);
+    color: var(--pearl);
+    font-family: 'DM Mono', monospace;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom Cursor */
+  .cursor {
+    width: 12px; height: 12px;
+    background: var(--biolum);
+    border-radius: 50%;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    mix-blend-mode: screen;
+    transition: transform 0.15s ease;
+  }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1px solid rgba(57,255,219,0.4);
+    border-radius: 50%;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9998;
+    transition: transform 0.4s ease, width 0.3s, height 0.3s;
+  }
+
+  /* Ocean Bubbles */
+  .bubbles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+  }
+  .bubble {
+    position: absolute;
+    bottom: -50px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,201,200,0.2);
+    background: radial-gradient(circle at 30% 30%, rgba(0,201,200,0.08), transparent);
+    animation: rise linear infinite;
+  }
+  @keyframes rise {
+    to { transform: translateY(-110vh) translateX(30px); opacity: 0; }
+  }
+
+  /* Water Shimmer Background */
+  .water-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 80%, rgba(14,124,123,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(0,201,200,0.08) 0%, transparent 50%),
+      linear-gradient(180deg, #020b18 0%, #050f1e 40%, #0a1f35 100%);
+    animation: waterShift 8s ease-in-out infinite alternate;
+  }
+  @keyframes waterShift {
+    from { filter: hue-rotate(0deg) brightness(1); }
+    to { filter: hue-rotate(10deg) brightness(1.05); }
+  }
+
+  /* HEADER */
+  header {
+    position: relative;
+    z-index: 10;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    overflow: hidden;
+  }
+
+  .depth-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.4em;
+    color: var(--cyan);
+    opacity: 0.6;
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    animation: fadeIn 1s ease 0.3s both;
+  }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(4rem, 12vw, 10rem);
+    font-weight: 900;
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(168,240,238,0.6);
+    position: relative;
+    animation: fadeUp 1s ease 0.5s both;
+  }
+  .hero-title span {
+    display: block;
+    color: var(--foam);
+    -webkit-text-stroke: 0;
+    text-shadow: 0 0 60px rgba(0,201,200,0.4), 0 0 120px rgba(0,201,200,0.15);
+  }
+
+  .hero-sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    color: rgba(168,240,238,0.5);
+    margin-top: 1.5rem;
+    letter-spacing: 0.05em;
+    animation: fadeIn 1s ease 0.9s both;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(0,201,200,0.4);
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    animation: fadeIn 1s ease 1.5s both;
+  }
+  .scroll-line {
+    width: 1px; height: 60px;
+    background: linear-gradient(to bottom, transparent, var(--cyan));
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.3; transform: scaleY(1); }
+    50% { opacity: 0.8; transform: scaleY(1.2); }
+  }
+
+  /* Giant decorative fish silhouette */
+  .hero-fish {
+    position: absolute;
+    right: -5%;
+    bottom: 10%;
+    width: 50vw;
+    max-width: 700px;
+    opacity: 0.04;
+    font-size: clamp(200px, 40vw, 600px);
+    line-height: 1;
+    animation: fishDrift 12s ease-in-out infinite alternate;
+    user-select: none;
+  }
+  @keyframes fishDrift {
+    from { transform: translateY(0) translateX(0); }
+    to { transform: translateY(-30px) translateX(-20px); }
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.5rem 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(to bottom, rgba(2,11,24,0.9), transparent);
+    backdrop-filter: blur(4px);
+  }
+  .nav-logo {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    color: var(--cyan);
+    text-transform: uppercase;
+  }
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+  .nav-links a {
+    color: rgba(168,240,238,0.5);
+    text-decoration: none;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    transition: color 0.3s;
+  }
+  .nav-links a:hover { color: var(--biolum); }
+
+  /* SECTION */
+  section {
+    position: relative;
+    z-index: 10;
+    padding: 8rem 2rem;
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.5em;
+    color: var(--teal);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .section-label::before {
+    content: '';
+    display: inline-block;
+    width: 40px;
+    height: 1px;
+    background: var(--teal);
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--foam);
+    margin-bottom: 1.5rem;
+  }
+
+  /* ANIMAL GRID */
+  .animals-grid {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 2px;
+    margin-top: 4rem;
+  }
+
+  .animal-card {
+    position: relative;
+    background: var(--abyss);
+    overflow: hidden;
+    cursor: none;
+    transition: transform 0.4s cubic-bezier(0.23,1,0.32,1);
+    border: 1px solid rgba(14,124,123,0.15);
+  }
+  .animal-card:hover { transform: scale(1.02); z-index: 2; }
+
+  .card-visual {
+    height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.6s ease;
+  }
+  .animal-card:hover .card-visual { transform: scale(1.1); }
+
+  .card-visual::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: inherit;
+    filter: blur(30px);
+    opacity: 0.3;
+    transform: scale(1.5);
+  }
+
+  .card-glow {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.4s;
+    background: radial-gradient(circle at center, rgba(57,255,219,0.15), transparent 70%);
+  }
+  .animal-card:hover .card-glow { opacity: 1; }
+
+  .emoji-wrap {
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 0 20px rgba(57,255,219,0.3));
+    animation: float 4s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  /* Stagger float animation */
+  .animal-card:nth-child(2) .emoji-wrap { animation-delay: -1s; }
+  .animal-card:nth-child(3) .emoji-wrap { animation-delay: -2s; }
+  .animal-card:nth-child(4) .emoji-wrap { animation-delay: -0.5s; }
+  .animal-card:nth-child(5) .emoji-wrap { animation-delay: -1.5s; }
+  .animal-card:nth-child(6) .emoji-wrap { animation-delay: -2.5s; }
+  .animal-card:nth-child(7) .emoji-wrap { animation-delay: -0.8s; }
+  .animal-card:nth-child(8) .emoji-wrap { animation-delay: -1.8s; }
+  .animal-card:nth-child(9) .emoji-wrap { animation-delay: -3s; }
+
+  .card-body {
+    padding: 1.8rem;
+    border-top: 1px solid rgba(14,124,123,0.2);
+  }
+
+  .card-depth {
+    font-size: 0.58rem;
+    letter-spacing: 0.3em;
+    color: var(--teal);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .card-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--foam);
+    margin-bottom: 0.3rem;
+    line-height: 1.2;
+  }
+
+  .card-latin {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: rgba(168,240,238,0.4);
+    margin-bottom: 1rem;
+  }
+
+  .card-desc {
+    font-size: 0.75rem;
+    line-height: 1.7;
+    color: rgba(168,240,238,0.6);
+    margin-bottom: 1.5rem;
+  }
+
+  .card-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: rgba(14,124,123,0.15);
+    border: 1px solid rgba(14,124,123,0.15);
+  }
+
+  .stat {
+    padding: 0.8rem 0.5rem;
+    background: var(--abyss);
+    text-align: center;
+  }
+  .stat-val {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--cyan);
+    display: block;
+  }
+  .stat-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    color: rgba(168,240,238,0.3);
+    text-transform: uppercase;
+    display: block;
+    margin-top: 0.2rem;
+  }
+
+  .card-tag {
+    display: inline-block;
+    margin-top: 1.2rem;
+    padding: 0.3rem 0.8rem;
+    border: 1px solid rgba(57,255,219,0.2);
+    font-size: 0.58rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--biolum);
+    transition: all 0.3s;
+  }
+  .animal-card:hover .card-tag {
+    background: rgba(57,255,219,0.08);
+    border-color: var(--biolum);
+  }
+
+  /* BG colors per card */
+  .bg-1 { background: linear-gradient(135deg, #0a2a4a 0%, #051520 100%); }
+  .bg-2 { background: linear-gradient(135deg, #1a0a30 0%, #05051f 100%); }
+  .bg-3 { background: linear-gradient(135deg, #001a20 0%, #021215 100%); }
+  .bg-4 { background: linear-gradient(135deg, #1a1a00 0%, #15100a 100%); }
+  .bg-5 { background: linear-gradient(135deg, #200a0a 0%, #150505 100%); }
+  .bg-6 { background: linear-gradient(135deg, #001520 0%, #010e15 100%); }
+  .bg-7 { background: linear-gradient(135deg, #0a2020 0%, #021515 100%); }
+  .bg-8 { background: linear-gradient(135deg, #1a0820 0%, #100515 100%); }
+  .bg-9 { background: linear-gradient(135deg, #001a10 0%, #021209 100%); }
+
+  /* ZONES SECTION */
+  .zones {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .zones-intro {
+    font-size: 0.8rem;
+    line-height: 1.9;
+    color: rgba(168,240,238,0.5);
+    max-width: 600px;
+    margin-bottom: 4rem;
+  }
+
+  .zone-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .zone-row {
+    display: grid;
+    grid-template-columns: 140px 1fr 100px;
+    align-items: center;
+    gap: 2rem;
+    padding: 1.4rem 0;
+    border-bottom: 1px solid rgba(14,124,123,0.1);
+    transition: background 0.3s;
+  }
+  .zone-row:hover { background: rgba(14,124,123,0.05); }
+
+  .zone-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.95rem;
+    color: var(--foam);
+  }
+  .zone-depth-label {
+    font-size: 0.58rem;
+    color: var(--teal);
+    letter-spacing: 0.2em;
+    margin-top: 0.2rem;
+  }
+  .zone-bar-wrap {
+    height: 4px;
+    background: rgba(14,124,123,0.15);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .zone-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s cubic-bezier(0.23,1,0.32,1);
+    animation: barGrow 2s ease both;
+    animation-play-state: paused;
+  }
+  .zone-bar-fill.animated { animation-play-state: running; }
+  @keyframes barGrow {
+    from { width: 0 !important; }
+  }
+
+  .zone-count {
+    font-size: 0.7rem;
+    color: rgba(168,240,238,0.4);
+    text-align: right;
+  }
+
+  /* FACT STRIP */
+  .fact-strip {
+    position: relative;
+    z-index: 10;
+    overflow: hidden;
+    border-top: 1px solid rgba(14,124,123,0.2);
+    border-bottom: 1px solid rgba(14,124,123,0.2);
+    padding: 1.2rem 0;
+    background: rgba(14,124,123,0.04);
+  }
+  .fact-ticker {
+    display: flex;
+    gap: 4rem;
+    white-space: nowrap;
+    animation: ticker 30s linear infinite;
+  }
+  .fact-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    color: rgba(168,240,238,0.45);
+    flex-shrink: 0;
+  }
+  .fact-dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--cyan);
+  }
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 10;
+    padding: 4rem 3rem 3rem;
+    border-top: 1px solid rgba(14,124,123,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .footer-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--foam);
+  }
+  .footer-note {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: rgba(168,240,238,0.25);
+    text-transform: uppercase;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(2,11,24,0.95);
+    backdrop-filter: blur(10px);
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--abyss);
+    border: 1px solid rgba(14,124,123,0.3);
+    max-width: 700px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    animation: fadeUp 0.3s ease;
+  }
+  .modal-close {
+    position: absolute;
+    top: 1.5rem; right: 1.5rem;
+    background: none;
+    border: 1px solid rgba(168,240,238,0.2);
+    color: var(--foam);
+    width: 36px; height: 36px;
+    cursor: none;
+    font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s;
+  }
+  .modal-close:hover { border-color: var(--biolum); color: var(--biolum); }
+  .modal-emoji { font-size: 6rem; padding: 3rem; text-align: center; display: block; }
+  .modal-body { padding: 0 2.5rem 2.5rem; }
+  .modal-name { font-family: 'Playfair Display', serif; font-size: 2.5rem; color: var(--foam); margin-bottom: 0.3rem; }
+  .modal-latin { font-family: 'Cormorant Garamond', serif; font-style: italic; color: rgba(168,240,238,0.4); margin-bottom: 1.5rem; }
+  .modal-section { margin-top: 1.5rem; }
+  .modal-section h4 { font-size: 0.6rem; letter-spacing: 0.3em; color: var(--teal); text-transform: uppercase; margin-bottom: 0.6rem; }
+  .modal-section p { font-size: 0.78rem; line-height: 1.8; color: rgba(168,240,238,0.6); }
+  .modal-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: rgba(14,124,123,0.15); margin-top: 1.5rem; }
+  .modal-fact { background: var(--abyss); padding: 1rem; }
+  .modal-fact span { display: block; font-size: 0.55rem; letter-spacing: 0.2em; color: var(--teal); text-transform: uppercase; margin-bottom: 0.3rem; }
+  .modal-fact strong { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--foam); font-weight: 400; }
+
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .animals-grid { grid-template-columns: 1fr; }
+    .zone-row { grid-template-columns: 110px 1fr; }
+    .zone-count { display: none; }
+    footer { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- Water Background -->
+<div class="water-bg"></div>
+<div class="bubbles" id="bubbles"></div>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-logo">Aqua Deep</div>
+  <ul class="nav-links">
+    <li><a href="#creatures">Creatures</a></li>
+    <li><a href="#zones">Ocean Zones</a></li>
+    <li><a href="#facts">Facts</a></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<header>
+  <p class="depth-label">Depth: 0 — 11,000 meters</p>
+  <h1 class="hero-title">
+    AQUA
+    <span>DEEP</span>
+  </h1>
+  <p class="hero-sub">Explore the creatures of the world's oceans, seas & rivers</p>
+  <div class="hero-fish">🐋</div>
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    scroll to dive
+  </div>
+</header>
+
+<!-- Fact Strip -->
+<div class="fact-strip">
+  <div class="fact-ticker" id="ticker"></div>
+</div>
+
+<!-- Creatures Section -->
+<section id="creatures">
+  <div style="max-width:1400px;margin:0 auto;">
+    <div class="section-label">Marine Life</div>
+    <h2 class="section-title">Ocean Creatures</h2>
+  </div>
+
+  <div class="animals-grid" id="animalGrid"></div>
+</section>
+
+<!-- Ocean Zones -->
+<section id="zones" style="background:rgba(5,15,30,0.6);">
+  <div class="zones">
+    <div class="section-label">Depth Classification</div>
+    <h2 class="section-title">Ocean Zones</h2>
+    <p class="zones-intro">The ocean is divided into distinct depth zones, each with unique light levels, pressure, temperature and biodiversity. From the sunlit surface to the crushing darkness of the hadal zone.</p>
+
+    <div class="zone-bars" id="zoneBars"></div>
+  </div>
+</section>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalContent">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <span class="modal-emoji" id="mEmoji"></span>
+    <div class="modal-body">
+      <div class="modal-name" id="mName"></div>
+      <div class="modal-latin" id="mLatin"></div>
+      <div class="modal-section">
+        <h4>About</h4>
+        <p id="mAbout"></p>
+      </div>
+      <div class="modal-section">
+        <h4>Behavior & Diet</h4>
+        <p id="mBehavior"></p>
+      </div>
+      <div class="modal-facts" id="mFacts"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-logo">Aqua Deep</div>
+  <div class="footer-note">© 2026 — Creatures of the Blue · Ocean Encyclopedia</div>
+</footer>
+
+<script>
+// --- Data ---
+const animals = [
+  {
+    emoji: "🦈", name: "Great White Shark", latin: "Carcharodon carcharias",
+    depth: "Surface — 1,200m", zone: "Epipelagic", bg: "bg-1",
+    tag: "Apex Predator",
+    desc: "One of Earth's most efficient predators, capable of detecting a single drop of blood in 100 liters of water. These living fossils have roamed oceans for 450 million years.",
+    stats: [{ v: "6m", l: "Length" }, { v: "1,100kg", l: "Weight" }, { v: "300+", l: "Teeth" }],
+    about: "The great white shark is the world's largest predatory fish. With torpedo-shaped bodies and powerful crescent-shaped tails, they can burst through water at incredible speeds. Their white underbelly provides camouflage when viewed from below.",
+    behavior: "Great whites are solitary hunters that ambush prey from below with explosive speed. They primarily feed on marine mammals, fish, and seabirds. Despite their fearsome reputation, unprovoked attacks on humans are rare.",
+    facts: [{ l: "Lifespan", v: "70 years" }, { l: "Speed", v: "56 km/h" }, { l: "Habitat", v: "All Oceans" }, { l: "Status", v: "Vulnerable" }]
+  },
+  {
+    emoji: "🐬", name: "Bottlenose Dolphin", latin: "Tursiops truncatus",
+    depth: "Surface — 500m", zone: "Epipelagic", bg: "bg-2",
+    tag: "Highly Intelligent",
+    desc: "Among the most intelligent marine mammals, dolphins possess self-awareness, complex social structures and communicate using a sophisticated system of clicks and whistles.",
+    stats: [{ v: "3.9m", l: "Length" }, { v: "300kg", l: "Weight" }, { v: "1600Hz", l: "Echoloc." }],
+    about: "Bottlenose dolphins are remarkable for their intelligence and adaptability. They live in social groups called pods of 2–15 individuals, though super-pods of hundreds have been observed. Their large brains rival those of great apes in complexity.",
+    behavior: "They cooperatively hunt fish by herding them into tight bait balls. Dolphins use echolocation — emitting clicks and interpreting the returning echoes — to navigate and locate prey even in complete darkness or murky water.",
+    facts: [{ l: "Lifespan", v: "40–60 yrs" }, { l: "Speed", v: "35 km/h" }, { l: "Dive Depth", v: "150m" }, { l: "Status", v: "Least Concern" }]
+  },
+  {
+    emoji: "🐙", name: "Giant Octopus", latin: "Enteroctopus dofleini",
+    depth: "0 — 1,500m", zone: "Mesopelagic", bg: "bg-3",
+    tag: "Master of Camouflage",
+    desc: "The giant Pacific octopus is the largest octopus species on Earth, capable of changing color and texture in milliseconds. Each arm operates semi-independently with its own neural network.",
+    stats: [{ v: "5m", l: "Arm Span" }, { v: "50kg", l: "Weight" }, { v: "3", l: "Hearts" }],
+    about: "Octopuses are cephalopod mollusks with eight arms lined with suckers. They have three hearts, blue copper-based blood, and a beak-like mouth. They're remarkably short-lived for their intelligence, surviving only 3–5 years.",
+    behavior: "Expert problem solvers and escape artists, they hunt crabs, clams, and fish by injecting paralyzing venom. They can squeeze through any opening larger than their beak. Females lay up to 100,000 eggs and starve themselves to guard them.",
+    facts: [{ l: "Lifespan", v: "3–5 years" }, { l: "Speed", v: "40 km/h" }, { l: "Intelligence", v: "Very High" }, { l: "Status", v: "Least Concern" }]
+  },
+  {
+    emoji: "🐠", name: "Clownfish", latin: "Amphiprioninae sp.",
+    depth: "1 — 15m", zone: "Epipelagic", bg: "bg-4",
+    tag: "Symbiotic Partner",
+    desc: "Famous for their mutualistic relationship with sea anemones whose stinging cells do not affect them. All clownfish are born male — the dominant individual becomes female.",
+    stats: [{ v: "11cm", l: "Length" }, { v: "250g", l: "Weight" }, { v: "30", l: "Species" }],
+    about: "Clownfish are small, brightly colored fish that live among the tentacles of sea anemones in the Indo-Pacific. Their bodies produce a special mucus that protects them from the anemone's sting, granting them a safe refuge from predators.",
+    behavior: "They defend their host anemone aggressively despite their tiny size. The male tends the eggs while the female protects the larger territory. When the female dies, the dominant male changes sex to take her place.",
+    facts: [{ l: "Lifespan", v: "6–10 years" }, { l: "Habitat", v: "Coral Reef" }, { l: "Diet", v: "Omnivore" }, { l: "Status", v: "Least Concern" }]
+  },
+  {
+    emoji: "🦑", name: "Colossal Squid", latin: "Mesonychoteuthis hamiltoni",
+    depth: "2,000 — 2,200m", zone: "Bathypelagic", bg: "bg-5",
+    tag: "Deep Sea Giant",
+    desc: "The largest invertebrate on Earth, with eyes the size of soccer balls — the largest of any living creature. It possesses rotating hooks on its tentacles for grappling prey.",
+    stats: [{ v: "14m", l: "Length" }, { v: "750kg", l: "Weight" }, { v: "30cm", l: "Eye Diam." }],
+    about: "The colossal squid lives in the deep Southern Ocean around Antarctica. Rarely seen alive, most knowledge comes from specimens found in sperm whale stomachs. It is more massive than the giant squid though similar in length.",
+    behavior: "It is believed to be an ambush predator at great depths, using its massive eyes — equipped with photophores to detect bioluminescence — to spot prey in total darkness. Sperm whales are its main predator and primary source of our knowledge about them.",
+    facts: [{ l: "Lifespan", v: "Unknown" }, { l: "Depth", v: "2,200m" }, { l: "Habitat", v: "Antarctic" }, { l: "Status", v: "Least Concern" }]
+  },
+  {
+    emoji: "🐋", name: "Blue Whale", latin: "Balaenoptera musculus",
+    depth: "Surface — 500m", zone: "Epipelagic", bg: "bg-6",
+    tag: "Largest Animal Ever",
+    desc: "The largest animal ever known to have existed on Earth. Its heart is the size of a small car, and its low-frequency calls can travel thousands of kilometers through ocean water.",
+    stats: [{ v: "33m", l: "Length" }, { v: "200,000kg", l: "Weight" }, { v: "180dB", l: "Call Volume" }],
+    about: "Blue whales are baleen whales — they filter feed by taking enormous gulps of water and pushing it through hundreds of baleen plates to capture tiny krill. Despite their immense size, they feed almost exclusively on these tiny crustaceans.",
+    behavior: "Blue whales are generally solitary or found in small groups. They communicate via low-frequency moans and pulses, the loudest sounds of any animal. They migrate seasonally between polar feeding grounds and tropical breeding waters.",
+    facts: [{ l: "Lifespan", v: "80–90 years" }, { l: "Speed", v: "30 km/h" }, { l: "Heart Beat", v: "2/min" }, { l: "Status", v: "Endangered" }]
+  },
+  {
+    emoji: "🦞", name: "American Lobster", latin: "Homarus americanus",
+    depth: "0 — 480m", zone: "Benthic", bg: "bg-7",
+    tag: "Biological Immortal",
+    desc: "Lobsters exhibit negligible senescence — they show no signs of aging. They grow indefinitely throughout their life and become more fertile with age rather than less.",
+    stats: [{ v: "64cm", l: "Length" }, { v: "20kg", l: "Weight" }, { v: "100+", l: "Yrs (max)" }],
+    about: "Lobsters are large marine crustaceans with strong claws, long antennae, and a segmented body covered by a hard exoskeleton. They must molt (shed their shell) to grow, leaving themselves vulnerable during this process.",
+    behavior: "Nocturnal and solitary, they shelter in rocky crevices by day and emerge to forage at night. They eat fish, crabs, clams, and even other lobsters. Lobsters were once so abundant they were used as fertilizer and considered peasant food.",
+    facts: [{ l: "Lifespan", v: "100+ years" }, { l: "Depth", v: "480m" }, { l: "Diet", v: "Carnivore" }, { l: "Status", v: "Least Concern" }]
+  },
+  {
+    emoji: "🐡", name: "Pufferfish", latin: "Tetraodontidae sp.",
+    depth: "10 — 200m", zone: "Epipelagic", bg: "bg-8",
+    tag: "Toxic Defense",
+    desc: "Pufferfish are among the most poisonous vertebrates on Earth. Their liver, skin, and ovaries contain tetrodotoxin — a toxin 1,200× more lethal than cyanide, with no known antidote.",
+    stats: [{ v: "90cm", l: "Length" }, { v: "0.5–5kg", l: "Weight" }, { v: "1,200×", l: "vs Cyanide" }],
+    about: "Pufferfish can inflate their elastic stomachs with water or air to make themselves nearly spherical, raising spines to deter predators. They are slow swimmers, found in tropical and subtropical ocean waters worldwide.",
+    behavior: "Pufferfish are sedentary and rely on their toxicity and inflation defense rather than speed. Male pufferfish create elaborate geometric patterns in sand to attract females. They eat algae, invertebrates, and hard-shelled mollusks.",
+    facts: [{ l: "Lifespan", v: "4–8 years" }, { l: "Toxin", v: "Tetrodotoxin" }, { l: "Habitat", v: "Tropical Seas" }, { l: "Status", v: "Least Concern" }]
+  },
+  {
+    emoji: "🐢", name: "Leatherback Sea Turtle", latin: "Dermochelys coriacea",
+    depth: "Surface — 1,280m", zone: "Mesopelagic", bg: "bg-9",
+    tag: "Ancient Navigator",
+    desc: "The world's largest turtle and deepest-diving reptile. Instead of a hard shell, it has a leathery carapace containing thousands of tiny bone fragments embedded in cartilage.",
+    stats: [{ v: "2.1m", l: "Length" }, { v: "900kg", l: "Weight" }, { v: "1,280m", l: "Max Depth" }],
+    about: "Leatherback sea turtles are the largest reptiles alive today. They have existed largely unchanged for 100 million years, outliving the dinosaurs. They can regulate their body temperature to some degree, unusual for reptiles.",
+    behavior: "They migrate thousands of kilometers between feeding and nesting grounds. Females return to the same beach where they were born to lay eggs. Their diet consists almost entirely of jellyfish, which they scoop up with backward-pointing spines in their mouths.",
+    facts: [{ l: "Lifespan", v: "45+ years" }, { l: "Speed", v: "35 km/h" }, { l: "Nesting", v: "Every 2–3 yrs" }, { l: "Status", v: "Vulnerable" }]
+  }
+];
+
+const zones = [
+  { name: "Sunlight Zone", sub: "0 — 200m", fill: 95, count: "~230,000 species", color: "linear-gradient(to right, #00c9c8, #0e7c7b)" },
+  { name: "Twilight Zone", sub: "200 — 1,000m", fill: 65, count: "~2,000 species", color: "linear-gradient(to right, #0e7c7b, #0a4a6e)" },
+  { name: "Midnight Zone", sub: "1,000 — 4,000m", fill: 40, count: "~700 species", color: "linear-gradient(to right, #0a4a6e, #051a30)" },
+  { name: "Abyssal Zone", sub: "4,000 — 6,000m", fill: 20, count: "~200 species", color: "linear-gradient(to right, #051a30, #020b18)" },
+  { name: "Hadal Zone", sub: "6,000 — 11,000m", fill: 8, count: "~30 species", color: "linear-gradient(to right, #020b18, #010408)" },
+];
+
+const facts = [
+  "The ocean covers 71% of Earth's surface and contains 97% of all water",
+  "Only 5% of the world's oceans have been explored",
+  "The Mariana Trench is deeper than Mount Everest is tall",
+  "Bioluminescence is the most common form of communication in the deep sea",
+  "Sound travels 4× faster in water than in air",
+  "The ocean produces 50% of the world's oxygen via phytoplankton",
+  "There are more species in the ocean than in all terrestrial ecosystems combined",
+  "The Blue Whale's heart weighs as much as a small car",
+  "Sea otters hold hands while sleeping to prevent drifting apart",
+  "Dolphins give each other unique names (signature whistles)",
+  "Pistol shrimp can generate heat hotter than the surface of the sun in their snapping claws",
+  "The Great Barrier Reef is the largest living structure on Earth, visible from space",
+];
+
+// --- Build Bubbles ---
+const bubblesEl = document.getElementById('bubbles');
+for (let i = 0; i < 18; i++) {
+  const b = document.createElement('div');
+  b.className = 'bubble';
+  const size = 8 + Math.random() * 40;
+  b.style.cssText = `
+    width:${size}px; height:${size}px;
+    left:${Math.random()*100}%;
+    animation-duration:${8+Math.random()*20}s;
+    animation-delay:${Math.random()*10}s;
+    opacity:${0.1+Math.random()*0.3};
+  `;
+  bubblesEl.appendChild(b);
+}
+
+// --- Build Ticker ---
+const ticker = document.getElementById('ticker');
+const allFacts = [...facts, ...facts]; // duplicate for seamless loop
+allFacts.forEach(f => {
+  const item = document.createElement('div');
+  item.className = 'fact-item';
+  item.innerHTML = `<div class="fact-dot"></div>${f}`;
+  ticker.appendChild(item);
+});
+
+// --- Build Animal Cards ---
+const grid = document.getElementById('animalGrid');
+animals.forEach((a, i) => {
+  const card = document.createElement('div');
+  card.className = 'animal-card';
+  card.innerHTML = `
+    <div class="card-visual ${a.bg}">
+      <div class="card-glow"></div>
+      <div class="emoji-wrap">${a.emoji}</div>
+    </div>
+    <div class="card-body">
+      <div class="card-depth">${a.depth} · ${a.zone}</div>
+      <div class="card-name">${a.name}</div>
+      <div class="card-latin">${a.latin}</div>
+      <div class="card-desc">${a.desc}</div>
+      <div class="card-stats">
+        ${a.stats.map(s => `<div class="stat"><span class="stat-val">${s.v}</span><span class="stat-label">${s.l}</span></div>`).join('')}
+      </div>
+      <div class="card-tag">${a.tag}</div>
+    </div>
+  `;
+  card.addEventListener('click', () => openModal(a));
+  grid.appendChild(card);
+});
+
+// --- Build Zones ---
+const zoneContainer = document.getElementById('zoneBars');
+zones.forEach(z => {
+  const row = document.createElement('div');
+  row.className = 'zone-row';
+  row.innerHTML = `
+    <div>
+      <div class="zone-name">${z.name}</div>
+      <div class="zone-depth-label">${z.sub}</div>
+    </div>
+    <div class="zone-bar-wrap">
+      <div class="zone-bar-fill" style="width:${z.fill}%; background:${z.color};"></div>
+    </div>
+    <div class="zone-count">${z.count}</div>
+  `;
+  zoneContainer.appendChild(row);
+});
+
+// Animate bars on scroll
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.querySelectorAll('.zone-bar-fill').forEach(b => b.classList.add('animated'));
+    }
+  });
+}, { threshold: 0.3 });
+observer.observe(zoneContainer);
+
+// --- Modal ---
+function openModal(a) {
+  document.getElementById('mEmoji').textContent = a.emoji;
+  document.getElementById('mName').textContent = a.name;
+  document.getElementById('mLatin').textContent = a.latin;
+  document.getElementById('mAbout').textContent = a.about;
+  document.getElementById('mBehavior').textContent = a.behavior;
+  const factsEl = document.getElementById('mFacts');
+  factsEl.innerHTML = a.facts.map(f => `
+    <div class="modal-fact">
+      <span>${f.l}</span>
+      <strong>${f.v}</strong>
+    </div>
+  `).join('');
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// --- Custom Cursor ---
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx = 0, my = 0, rx = 0, ry = 0;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cursor.style.transform = `translate(${mx - 6}px, ${my - 6}px)`;
+});
+
+(function animateRing() {
+  rx += (mx - rx) * 0.12;
+  ry += (my - ry) * 0.12;
+  ring.style.transform = `translate(${rx - 18}px, ${ry - 18}px)`;
+  requestAnimationFrame(animateRing);
+})();
+</script>
+</body>
+</html>
