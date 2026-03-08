@@ -9,6 +9,7 @@ Aqua Deep presents detailed information about nine iconic marine animals across 
 
 The site design follows a deep-ocean visual language featuring dark navy backgrounds, cyan and teal accents, floating animations, and a scrolling ocean fact ticker. The entire project is contained in a single HTML file, making it lightweight and easy to run in any modern browser.
 
+![Screenshot_8-3-2026_195513_127 0 0 1](https://github.com/user-attachments/assets/28457e73-8514-4ecf-9305-e74bf37fb621)
 
 ## Features
 
